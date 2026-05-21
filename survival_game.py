@@ -56,7 +56,7 @@ class SurvivalGame:
         print(f"⚡ Energy: {self._bar(self.energy)}")
         print("-"*60)
         print(f"📍 Location: {self.current_location.value} | 🌡️  Temp: {self.temperature}°C | 🌧️  Weather: {self.weather.value}")
-        print(f"🏠 Shelter: {'█' * self.shelter_level}{'░' * (5 - self.shelter_level)} | 🔥 Fire: {'█' * self.fire_level}{'░' * (5 - self.fire_level)}")
+        print(f"🏠 Shelter: {'█' * int(self.shelter_level)}{'░' * (5 - int(self.shelter_level))} | 🔥 Fire: {'█' * int(self.fire_level)}{'░' * (5 - int(self.fire_level))}")
         print("-"*60)
         print(f"Inventory: Wood({self.inventory['wood']}) Water({self.inventory['water']}) Food({self.inventory['food']}) Stones({self.inventory['stones']})")
         print("-"*60)
@@ -299,10 +299,10 @@ class SurvivalGame:
             self.health -= abs(self.thirst) // 10
             self.thirst = 0
         
-        # Fire maintenance
+        # Fire maintenance - convert to int to prevent float errors
         if self.fire_level > 0:
             self.fire_level -= random.random() * 0.5
-            self.fire_level = max(0, self.fire_level)
+            self.fire_level = max(0, int(self.fire_level))
         
         # Score calculation
         self.score += self.day * 10 + self.shelter_level * 5 + self.inventory["food"]
