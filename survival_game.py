@@ -17,6 +17,25 @@ class Location(Enum):
     RIVER = "River"
 
 class SurvivalGame:
+    # Class-level constants for performance
+    WEATHER_EFFECTS = {
+        Weather.CLEAR: 2,
+        Weather.RAINY: -3,
+        Weather.STORMY: -8,
+        Weather.FREEZING: -15
+    }
+    
+    LOCATION_RESOURCES = {
+        Location.FOREST: {"wood": (2, 8), "stones": (1, 3)},
+        Location.BEACH: {"wood": (1, 4), "stones": (3, 8)},
+        Location.MOUNTAINS: {"wood": (0, 2), "stones": (5, 12)},
+        Location.CAVE: {"wood": (0, 0), "stones": (2, 6)},
+        Location.RIVER: {"wood": (1, 5), "stones": (1, 4)},
+    }
+    
+    LOCATION_LIST = list(Location)
+    WEATHER_LIST = list(Weather)
+    
     def __init__(self):
         self.player_name = ""
         self.health = 100
@@ -56,7 +75,11 @@ class SurvivalGame:
         print(f"⚡ Energy: {self._bar(self.energy)}")
         print("-"*60)
         print(f"📍 Location: {self.current_location.value} | 🌡️  Temp: {self.temperature}°C | 🌧️  Weather: {self.weather.value}")
-        print(f"🏠 Shelter: {'█' * self.shelter_level}{'░' * (5 - self.shelter_level)} | 🔥 Fire: {'█' * self.fire_level}{'░' * (5 - self.fire_level)}")
+        
+        # Optimized bar rendering
+        shelter_bar = '█' * self.shelter_level + '░' * (5 - self.shelter_level)
+        fire_bar = '█' * self.fire_level + '░' * (5 - int(self.fire_level))
+        print(f"🏠 Shelter: {shelter_bar} | 🔥 Fire: {fire_bar}")
         print("-"*60)
         print(f"Inventory: Wood({self.inventory['wood']}) Water({self.inventory['water']}) Food({self.inventory['food']}) Stones({self.inventory['stones']})")
         print("-"*60)
@@ -68,29 +91,23 @@ class SurvivalGame:
     def update_environment(self):
         """Update weather and temperature"""
         if random.random() < 0.3:
-            self.weather = random.choice(list(Weather))
+            self.weather = random.choice(self.WEATHER_LIST)
         
-        weather_effects = {
-            Weather.CLEAR: 2,
-            Weather.RAINY: -3,
-            Weather.STORMY: -8,
-            Weather.FREEZING: -15
-        }
-        
-        self.temperature += weather_effects.get(self.weather, 0) + random.randint(-2, 2)
-        self.temperature = max(-40, min(50, self.temperature))
+        # Use cached weather effects
+        temp_change = self.WEATHER_EFFECTS.get(self.weather, 0) + random.randint(-2, 2)
+        self.temperature = max(-40, min(50, self.temperature + temp_change))
     
     def apply_temperature_damage(self):
         """Apply damage based on temperature and shelter"""
-        damage = 0
         if self.temperature < 0:
             damage = max(1, 5 - self.shelter_level)
         elif self.temperature > 40:
             damage = max(1, 4 - self.shelter_level)
+        else:
+            return
         
-        if damage > 0:
-            self.health -= damage
-            print(f"⚠️  Temperature damage: -{damage} health")
+        self.health -= damage
+        print(f"⚠️  Temperature damage: -{damage} health")
     
     def show_menu(self):
         print("\n🎮 ACTIONS:")
@@ -109,15 +126,7 @@ class SurvivalGame:
         """Search for wood and stones"""
         print("\n🔍 Searching for resources...")
         
-        location_resources = {
-            Location.FOREST: {"wood": (2, 8), "stones": (1, 3)},
-            Location.BEACH: {"wood": (1, 4), "stones": (3, 8)},
-            Location.MOUNTAINS: {"wood": (0, 2), "stones": (5, 12)},
-            Location.CAVE: {"wood": (0, 0), "stones": (2, 6)},
-            Location.RIVER: {"wood": (1, 5), "stones": (1, 4)},
-        }
-        
-        resources = location_resources.get(self.current_location, {})
+        resources = self.LOCATION_RESOURCES.get(self.current_location, {})
         found_something = False
         
         for resource, (min_val, max_val) in resources.items():
@@ -138,12 +147,12 @@ class SurvivalGame:
     
     def build_shelter(self):
         """Build or upgrade shelter"""
-        wood_cost = 5 + (self.shelter_level * 3)
-        stone_cost = 3 + (self.shelter_level * 2)
-        
         if self.shelter_level >= 5:
             print("✅ Your shelter is already maxed out!")
             return
+        
+        wood_cost = 5 + (self.shelter_level * 3)
+        stone_cost = 3 + (self.shelter_level * 2)
         
         if self.inventory["wood"] >= wood_cost and self.inventory["stones"] >= stone_cost:
             self.inventory["wood"] -= wood_cost
@@ -180,7 +189,6 @@ class SurvivalGame:
         print("\n🏹 Hunting and gathering...")
         
         success_chance = random.random()
-        food_found = 0
         
         if success_chance < 0.6:
             food_found = random.randint(5, 20)
@@ -189,6 +197,7 @@ class SurvivalGame:
             food_found = random.randint(1, 10)
             print(f"⚠️  Found some food: {food_found}")
         else:
+            food_found = 0
             print("❌ Hunting was unsuccessful.")
         
         self.inventory["food"] += food_found
@@ -229,14 +238,13 @@ class SurvivalGame:
     def move_location(self):
         """Move to a different location"""
         print("\n🗺️  Available locations:")
-        locations = list(Location)
-        for i, loc in enumerate(locations, 1):
+        for i, loc in enumerate(self.LOCATION_LIST, 1):
             print(f"{i}. {loc.value}")
         
         try:
             choice = int(input("Choose location (1-5): ")) - 1
-            if 0 <= choice < len(locations):
-                self.current_location = locations[choice]
+            if 0 <= choice < len(self.LOCATION_LIST):
+                self.current_location = self.LOCATION_LIST[choice]
                 print(f"✅ Traveled to {self.current_location.value}")
                 self.energy -= 20
                 self.hunger -= 15
