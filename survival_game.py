@@ -65,9 +65,9 @@ class SurvivalGame:
         print("-"*60)
         print(f"📍 Location: {self.current_location.value} | 🌡️  Temp: {self.temperature}°C | 🌧️  Weather: {self.weather.value}")
         
-        # Create shelter and fire visual bars
-        shelter_bar = "█" * self.shelter_level + "░" * (5 - self.shelter_level)
-        fire_bar = "█" * self.fire_level + "░" * (5 - self.fire_level)
+        # Create shelter and fire visual bars - use int() for safe display
+        shelter_bar = "█" * int(self.shelter_level) + "░" * (5 - int(self.shelter_level))
+        fire_bar = "█" * int(self.fire_level) + "░" * (5 - int(self.fire_level))
         print(f"🏠 Shelter: {shelter_bar} | 🔥 Fire: {fire_bar}")
         
         print("-"*60)
@@ -305,7 +305,7 @@ class SurvivalGame:
             self.health -= abs(self.thirst) // 10
             self.thirst = 0
 
-        # Fire maintenance - gradual decay
+        # Fire maintenance - gradual decay (fire level can be fractional internally)
         if self.fire_level > 0:
             decay_amount = random.uniform(0.05, 0.15)
             self.fire_level = max(0, self.fire_level - decay_amount)
