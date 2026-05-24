@@ -167,7 +167,7 @@ class SurvivalGame:
         
         if self.inventory["wood"] >= wood_cost:
             self.inventory["wood"] -= wood_cost
-            self.fire_level += 1
+            self.fire_level = int(self.fire_level) + 1
             self.temperature += 10
             print(f"🔥 Fire level increased to {self.fire_level}!")
             self.energy -= 10
