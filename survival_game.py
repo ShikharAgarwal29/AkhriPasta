@@ -299,10 +299,10 @@ class SurvivalGame:
             self.health -= abs(self.thirst) // 10
             self.thirst = 0
         
-        # Fire maintenance - convert to int to prevent float errors
+        # Fire maintenance - gradual decay to prevent complete loss
         if self.fire_level > 0:
-            self.fire_level -= random.random() * 0.5
-            self.fire_level = max(0, int(self.fire_level))
+            self.fire_level -= random.random() * 0.1
+            self.fire_level = max(0, self.fire_level)
         
         # Score calculation
         self.score += self.day * 10 + self.shelter_level * 5 + self.inventory["food"]
